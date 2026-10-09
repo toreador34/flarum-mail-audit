@@ -12,7 +12,7 @@ namespace Toreador\MailAudit\Provider;
 use Flarum\Foundation\AbstractServiceProvider;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Container\Container;
-use Toreador\MailAudit\Mail\AuditTransport;
+use Toreador\MailAudit\Mail\AuditSwiftMailer;
 use Toreador\MailAudit\Mail\SwiftMessageExtractor;
 use Toreador\MailAudit\MailAuditRecorder;
 use Toreador\MailAudit\MailAuditRepository;
@@ -43,7 +43,7 @@ class MailAuditServiceProvider extends AbstractServiceProvider
     }
 
     /**
-     * Wrap the Swift transport so failed sends can be recorded as well.
+     * Wrap the Swift mailer so failed sends can be recorded as well.
      *
      * `swift.mailer` is resolved lazily by Flarum's mail service provider,
      * so decorating the binding here is enough for web requests as well as
@@ -51,7 +51,7 @@ class MailAuditServiceProvider extends AbstractServiceProvider
      */
     protected function extendSwiftMailer(): void
     {
-        if (! interface_exists('Swift_Transport') || ! class_exists('Swift_Mailer')) {
+        if (! class_exists('Swift_Mailer')) {
             // Flarum 2.x dropped Swift Mailer; the event listeners still work.
             return;
         }
@@ -61,11 +61,9 @@ class MailAuditServiceProvider extends AbstractServiceProvider
                 return $mailer;
             }
 
-            return new \Swift_Mailer(
-                new AuditTransport(
-                    $mailer->getTransport(),
-                    $container->make(MailAuditRecorder::class)
-                )
+            return new AuditSwiftMailer(
+                $mailer->getTransport(),
+                $container->make(MailAuditRecorder::class)
             );
         });
     }

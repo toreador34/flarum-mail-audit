@@ -41,13 +41,14 @@ are required.
   stored as a `pending` row before it is handed to the transport. This works
   for immediate sends as well as for queued notification emails (the queue
   worker boots the same hooks).
-- The Swift transport is wrapped by `AuditTransport`
-  (`src/Mail/AuditTransport.php`). It finalises the row as `sent` or `failed`
-  and records the exception class/message when the transport throws. Because
-  the wrapper sits below `Swift_Mailer`, failures that Swift swallows
-  internally (such as `RfcComplianceException` for invalid addresses) are
-  still recorded correctly, and a late `MessageSent` event can never flip a
-  failure back to `sent`.
+- The Swift mailer is wrapped by `AuditSwiftMailer`
+  (`src/Mail/AuditSwiftMailer.php`). It finalises the row as `sent` or
+  `failed` and records the exception class/message when the send throws.
+  Because the wrapper extends `Swift_Mailer` itself, it also sees failures
+  thrown while the transport is being started (SMTP connection refused,
+  authentication errors, ...) and the `RfcComplianceException` case that
+  `Swift_Mailer` swallows internally (invalid addresses, transport returns
+  0). A late `MessageSent` event can never flip a failure back to `sent`.
 - Rows that remain `pending` (process killed, another listener cancelled the
   send, ...) are finalised as `failed` by the scheduled prune task.
 
