@@ -1,0 +1,49 @@
+{
+    "name": "toreador/flarum-mail-audit",
+    "description": "Records every outgoing Flarum email in the database and lets admins inspect recipients, subject, HTML/text bodies and headers from the admin panel.",
+    "keywords": [
+        "flarum",
+        "mail",
+        "email",
+        "audit",
+        "log",
+        "smtp",
+        "outbox"
+    ],
+    "license": "MIT",
+    "type": "flarum-extension",
+    "authors": [
+        {
+            "name": "Toreador",
+            "homepage": "https://gurkanatilgan.com.tr",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/toreador34/flarum-mail-audit/issues",
+        "source": "https://github.com/toreador34/flarum-mail-audit"
+    },
+    "require": {
+        "php": ">=7.4",
+        "flarum/core": "^1.2.0"
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Mail Audit",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-envelope-open-text",
+                "backgroundColor": "#3B2A5A",
+                "color": "#C4B5FD"
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Toreador\\MailAudit\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

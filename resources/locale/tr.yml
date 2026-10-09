@@ -1,0 +1,106 @@
+toreador-flarum-mail-audit:
+  admin:
+    nav:
+      mail_audit: E-posta Denetimi
+      title: Forumdan çıkan tüm e-postaları incele
+
+    settings:
+      open_list_button: E-posta denetim listesini aç
+      open_list_help: |
+        Gönderilen her e-posta ayrı bir sayfada listelenir; böylece siz bu
+        ayarları değiştirirken liste kullanılabilir kalır. Aynı sayfaya admin
+        sol menüsündeki "E-posta Denetimi" bağlantısından da ulaşabilirsiniz.
+      enabled_label: Giden e-postaları kaydet
+      enabled_help: |
+        Etkinleştirildiğinde, posta sürücüsüne verilen her e-posta
+        gönderilmeden önce veritabanına kaydedilir (gönderen, alıcılar, konu,
+        gövde ve başlıklar). Kaydı hemen durdurmak için devre dışı bırakın.
+      capture_body_label: Mesaj gövdelerini sakla
+      capture_body_help: |
+        Etkinleştirildiğinde, oluşturulan HTML ve düz metin gövdeleri de
+        saklanır. Yalnızca üst veriyi (gönderen, alıcılar, konu, başlıklar)
+        tutmak için devre dışı bırakın. Gizliliğe duyarlı forumlar veya yer
+        tasarrufu için kullanışlıdır.
+      retention_days_label: Saklama süresi (gün)
+      retention_days_help: |
+        Bu günden eski kayıtlar, günlük çalışan `mail-audit:prune` planlı
+        görevi tarafından silinir. Kayıtları sonsuza kadar tutmak için 0
+        girin. Varsayılan: 30.
+
+    page:
+      title: E-posta Denetimi
+      subtitle: Forumdan çıkan (veya çıkamayan) tüm e-postalar.
+      refresh: Yenile
+      auto_refresh: Otomatik yenile
+      table_missing: |
+        E-posta denetim tablosu henüz oluşturulmamış. Oluşturmak için
+        `php flarum migrate` komutunu çalıştırın.
+      disabled_banner: |
+        Kayıt, E-posta Denetimi ayarlarında devre dışı bırakılmış; yeniden
+        etkinleştirene kadar yeni e-postalar listelenmez.
+      stats:
+        total: Toplam
+        total_help: Kaydedilen e-posta sayısı.
+        sent: Gönderildi
+        sent_help: Posta sürücüsüne başarıyla teslim edilen e-postalar.
+        failed: Başarısız
+        failed_help: Sürücünün reddettiği e-postalar. Hatayı görmek için kaydı açın.
+        pending: Beklemede
+        pending_help: Şu anda gönderilen veya yarıda kesilen e-postalar.
+        last_24h: Son 24 saat
+        last_24h_help: Son 24 saatte kaydedilen e-postalar.
+
+    filters:
+      all_statuses: Tüm durumlar
+      status_sent: Gönderildi
+      status_failed: Başarısız
+      status_pending: Beklemede
+      search_placeholder: Konu, alıcı, gönderen veya mesaj kimliği ara...
+      clear_all: Tümünü Temizle
+      clear_all_help: Tüm e-posta denetim kayıtlarını kalıcı olarak sil.
+      clear_all_confirm: Tüm e-posta denetim kayıtları kalıcı olarak silinsin mi? Bu işlem geri alınamaz.
+
+    table:
+      id: Kimlik
+      status: Durum
+      subject: Konu
+      to: Alıcı
+      from: Gönderen
+      created_at: Tarih
+      actions: İşlemler
+      empty: Henüz kaydedilmiş e-posta yok.
+      no_subject: (konu yok)
+      view_title: Bu e-postayı görüntüle.
+      delete_title: Bu kaydı sil.
+      delete_confirm: "#{id} numaralı e-posta denetim kaydı kalıcı olarak silinsin mi?"
+      deleted: "#{id} numaralı kayıt silindi."
+      cleared: "{count} kayıt silindi."
+      more_recipients: "+{count} alıcı daha"
+
+    status:
+      sent: Gönderildi
+      failed: Başarısız
+      pending: Beklemede
+      unknown: Bilinmiyor
+
+    pagination:
+      x_of_y: "{from}-{to} / {total}"
+
+    modal:
+      title: "E-posta #{id}"
+      transport: Sürücü
+      message_id: Mesaj Kimliği
+      created_at: Kayıt Zamanı
+      sent_at: Gönderim
+      from: Kimden
+      to: Kime
+      cc: Cc
+      bcc: Bcc
+      reply_to: Yanıtla
+      attachments: Ekler
+      preview_html: HTML önizleme
+      preview_text: Düz metin sürümü
+      headers: Başlıklar
+      no_body: |
+        Bu e-posta için gövde saklanmamış. Ya mesajın gövdesi yoktu ya da
+        eklenti ayarlarında "Mesaj gövdelerini sakla" devre dışı bırakılmış.

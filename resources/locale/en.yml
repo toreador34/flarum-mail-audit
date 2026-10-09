@@ -1,0 +1,105 @@
+toreador-flarum-mail-audit:
+  admin:
+    nav:
+      mail_audit: Mail Audit
+      title: Inspect every email sent by the forum
+
+    settings:
+      open_list_button: Open the mail audit list
+      open_list_help: |
+        Every outgoing email is listed on a dedicated page, so the list stays
+        available while you change these settings. You can also reach it from
+        the "Mail Audit" link in the admin sidebar.
+      enabled_label: Record outgoing emails
+      enabled_help: |
+        When enabled, every email handed to the mail driver is stored in the
+        database (sender, recipients, subject, body and headers) before it is
+        sent. Disable this to stop recording immediately.
+      capture_body_label: Store message bodies
+      capture_body_help: |
+        When enabled, the rendered HTML and plain text bodies are stored as
+        well. Disable it to keep only metadata (sender, recipients, subject,
+        headers). Useful for privacy-sensitive forums or to save space.
+      retention_days_label: Retention (days)
+      retention_days_help: |
+        Entries older than this many days are deleted by the daily
+        `mail-audit:prune` scheduled task. Enter 0 to keep entries forever.
+        Default: 30.
+
+    page:
+      title: Mail Audit
+      subtitle: Every email that left (or failed to leave) the forum.
+      refresh: Refresh
+      auto_refresh: Auto refresh
+      table_missing: |
+        The mail audit table does not exist yet. Run `php flarum migrate`
+        to create it.
+      disabled_banner: |
+        Recording is disabled in the Mail Audit settings; new emails will not
+        be listed until you enable it again.
+      stats:
+        total: Total
+        total_help: Number of recorded emails.
+        sent: Sent
+        sent_help: Emails that were successfully handed to the mail transport.
+        failed: Failed
+        failed_help: Emails the transport rejected. Open an entry to see the error.
+        pending: Pending
+        pending_help: Emails that are being sent right now, or were interrupted.
+        last_24h: Last 24h
+        last_24h_help: Emails recorded during the last 24 hours.
+
+    filters:
+      all_statuses: All statuses
+      status_sent: Sent
+      status_failed: Failed
+      status_pending: Pending
+      search_placeholder: Search subject, recipient, sender or message id...
+      clear_all: Clear all
+      clear_all_help: Permanently delete every mail audit entry.
+      clear_all_confirm: All mail audit entries will be permanently deleted. This cannot be undone. Continue?
+
+    table:
+      id: ID
+      status: Status
+      subject: Subject
+      to: Recipient
+      from: Sender
+      created_at: Date
+      actions: Actions
+      empty: No emails have been recorded yet.
+      no_subject: (no subject)
+      view_title: View this email.
+      delete_title: Delete this entry.
+      delete_confirm: "Mail audit entry #{id} will be permanently deleted. Continue?"
+      deleted: "Entry #{id} deleted."
+      cleared: "{count} entries deleted."
+      more_recipients: "+{count} more"
+
+    status:
+      sent: Sent
+      failed: Failed
+      pending: Pending
+      unknown: Unknown
+
+    pagination:
+      x_of_y: "{from}-{to} of {total}"
+
+    modal:
+      title: "Email #{id}"
+      transport: Driver
+      message_id: Message ID
+      created_at: Recorded
+      sent_at: Sent
+      from: From
+      to: To
+      cc: Cc
+      bcc: Bcc
+      reply_to: Reply-To
+      attachments: Attachments
+      preview_html: HTML preview
+      preview_text: Text version
+      headers: Headers
+      no_body: |
+        No body was stored for this email. Either the message had no body, or
+        "Store message bodies" is disabled in the extension settings.
