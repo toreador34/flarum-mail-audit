@@ -24,13 +24,19 @@
         "source": "https://github.com/toreador34/flarum-mail-audit"
     },
     "require": {
-        "php": ">=7.4",
-        "flarum/core": "^1.2.0"
+        "php": "^8.3",
+        "flarum/core": "^2.0"
     },
     "extra": {
         "flarum-extension": {
             "title": "Mail Audit",
             "category": "feature",
+            "database-support": [
+                "mysql",
+                "mariadb",
+                "pgsql",
+                "sqlite"
+            ],
             "icon": {
                 "name": "fas fa-envelope-open-text",
                 "backgroundColor": "#3B2A5A",

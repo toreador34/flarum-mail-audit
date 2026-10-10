@@ -11,6 +11,7 @@ namespace Toreador\MailAudit\Console;
 
 use Flarum\Console\AbstractCommand;
 use Flarum\Settings\SettingsRepositoryInterface;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputOption;
 use Toreador\MailAudit\MailAuditRepository;
 
@@ -43,7 +44,7 @@ class PruneMailAuditCommand extends AbstractCommand
             ->addOption('stale-minutes', null, InputOption::VALUE_REQUIRED, 'Mark pending entries older than this many minutes as failed.', '15');
     }
 
-    protected function fire()
+    protected function fire(): int
     {
         $staleMinutes = (int) $this->input->getOption('stale-minutes');
 
@@ -70,5 +71,7 @@ class PruneMailAuditCommand extends AbstractCommand
         } else {
             $this->info('Retention is disabled; nothing was deleted.');
         }
+
+        return Command::SUCCESS;
     }
 }

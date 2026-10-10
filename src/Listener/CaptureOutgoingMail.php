@@ -26,15 +26,24 @@ class CaptureOutgoingMail
     }
 
     /**
-     * NOTE: Laravel 8 dispatches this event through the event dispatcher's
+     * Secondary capture point. On Flarum 2.x the transport wrapper
+     * (AuditTransport) is the one that always sees a send, because core's
+     * MutateEmail listener returns true and Laravel dispatches MessageSending
+     * with until(), which stops the listener chain after core. This listener
+     * is kept as a compatibility path for environments where the event does
+     * reach it; capture() is idempotent per message object.
+     *
+     * NOTE: Laravel dispatches this event through the event dispatcher's
      * `until()` method, which cancels the email when a listener returns
      * `false`. This listener must always return null.
      */
     public function handle(MessageSending $event)
     {
         try {
-            if (isset($event->message)) {
-                $this->recorder->capture($event->message);
+            $message = $event->message;
+
+            if ($message !== null) {
+                $this->recorder->capture($message);
             }
         } catch (Throwable $e) {
             // Auditing must never break mail delivery.

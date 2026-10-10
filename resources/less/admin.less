@@ -9,9 +9,9 @@
   }
 
   &-stat {
-    background: @body-bg;
-    border: 1px solid @control-bg;
-    border-radius: @border-radius;
+    background: var(--body-bg);
+    border: 1px solid var(--control-bg);
+    border-radius: var(--border-radius);
     padding: 14px 16px;
 
     & code {
@@ -20,7 +20,7 @@
 
     small {
       display: block;
-      color: @muted-color;
+      color: var(--muted-color);
       margin-bottom: 4px;
     }
 
@@ -55,9 +55,9 @@
 
   &-table-wrap {
     overflow-x: auto;
-    background: @body-bg;
-    border: 1px solid @control-bg;
-    border-radius: @border-radius;
+    background: var(--body-bg);
+    border: 1px solid var(--control-bg);
+    border-radius: var(--border-radius);
   }
 
   table.MailAuditPage-table {
@@ -68,16 +68,16 @@
     th,
     td {
       padding: 10px 12px;
-      border-bottom: 1px solid @control-bg;
+      border-bottom: 1px solid var(--control-bg);
       vertical-align: top;
       text-align: left;
       white-space: nowrap;
     }
 
     th {
-      color: @muted-color;
+      color: var(--muted-color);
       font-weight: bold;
-      background: @control-bg;
+      background: var(--control-bg);
     }
 
     tr:last-child td {
@@ -95,14 +95,14 @@
       }
 
       &-error {
-        color: @error-color;
+        color: var(--error-color);
         font-size: 12px;
         font-family: @monospace-font-family;
         word-break: break-word;
       }
 
       &-meta {
-        color: @muted-color;
+        color: var(--muted-color);
         font-size: 12px;
         margin-top: 2px;
       }
@@ -128,7 +128,7 @@
     justify-content: flex-end;
     gap: 8px;
     margin-top: 12px;
-    color: @muted-color;
+    color: var(--muted-color);
     font-size: 13px;
   }
 
@@ -141,23 +141,23 @@
     white-space: nowrap;
 
     &--sent {
-      background: @alert-success-bg;
-      color: @alert-success-color;
+      background: var(--alert-success-bg);
+      color: var(--alert-success-color);
     }
 
     &--failed {
-      background: fade(@error-color, 15%);
-      color: @error-color;
+      background: color-mix(in srgb, var(--error-color) 15%, transparent);
+      color: var(--error-color);
     }
 
     &--pending {
-      background: fade(@muted-color, 20%);
-      color: @muted-color;
+      background: color-mix(in srgb, var(--muted-color) 20%, transparent);
+      color: var(--muted-color);
     }
 
     &--unknown {
-      background: fade(@muted-color, 20%);
-      color: @muted-color;
+      background: color-mix(in srgb, var(--muted-color) 20%, transparent);
+      color: var(--muted-color);
     }
   }
 }
@@ -172,7 +172,7 @@
     margin-bottom: 14px;
 
     &-time {
-      color: @muted-color;
+      color: var(--muted-color);
       font-size: 13px;
     }
   }
@@ -188,7 +188,7 @@
     }
 
     dt {
-      color: @muted-color;
+      color: var(--muted-color);
       font-size: 12px;
       font-weight: bold;
     }
@@ -211,14 +211,14 @@
   &-preview {
     width: 100%;
     height: 420px;
-    border: 1px solid @control-bg;
-    border-radius: @border-radius;
+    border: 1px solid var(--control-bg);
+    border-radius: var(--border-radius);
     background: #fff;
   }
 
   &-pre {
-    background: @control-bg;
-    border-radius: @border-radius;
+    background: var(--control-bg);
+    border-radius: var(--border-radius);
     padding: 10px;
     font-size: 12px;
     font-family: @monospace-font-family;

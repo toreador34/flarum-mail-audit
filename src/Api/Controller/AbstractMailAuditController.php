@@ -9,10 +9,9 @@
 
 namespace Toreador\MailAudit\Api\Controller;
 
+use Flarum\Http\Exception\RouteNotFoundException;
 use Flarum\Http\RequestUtil;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Laminas\Diactoros\Response\JsonResponse;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Toreador\MailAudit\MailAuditRepository;
@@ -32,7 +31,9 @@ abstract class AbstractMailAuditController implements RequestHandlerInterface
     protected function requireAdmin(ServerRequestInterface $request): void
     {
         if (! RequestUtil::getActor($request)->isAdmin()) {
-            throw new ModelNotFoundException();
+            // Hide the endpoints entirely from non-admins instead of exposing
+            // them with a 403.
+            throw new RouteNotFoundException($request->getUri()->getPath());
         }
     }
 

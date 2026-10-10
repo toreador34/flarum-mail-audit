@@ -2,7 +2,7 @@
 
 [GitHub](https://github.com/toreador34/flarum-mail-audit) · [Packagist](https://packagist.org/packages/toreador/flarum-mail-audit)
 
-Flarum 1.x admin extension that records **every outgoing email** in the
+Flarum 2.x admin extension that records **every outgoing email** in the
 database and lets administrators inspect exactly what was sent (or why it
 failed): sender and recipients, subject, rendered HTML and plain-text bodies,
 MIME headers and attachment metadata — all from the admin panel.
@@ -10,6 +10,10 @@ MIME headers and attachment metadata — all from the admin panel.
 ```
 toreador/flarum-mail-audit
 ```
+
+> **Version notice**
+> `v2.x` supports **Flarum 2.0+** (Symfony Mailer) and requires PHP 8.3+.
+> Use the `v1.0.x` releases for Flarum 1.x (Swift Mailer).
 
 ## Installation
 
@@ -30,25 +34,27 @@ php flarum cache:clear
 > then `composer require toreador/flarum-mail-audit:*`.
 
 If you installed from source, rebuild the admin JS bundle with
-`cd js && npm run build` (the committed `js/dist` is used by releases).
+`cd js && npm install && npm run build` (the committed `js/dist` is used by
+releases).
 
 ## How it captures mail
 
 The extension hooks into Flarum's own mail pipeline; no mail driver changes
 are required.
 
-- `Illuminate\Mail\Events\MessageSending` — the fully rendered message is
-  stored as a `pending` row before it is handed to the transport. This works
-  for immediate sends as well as for queued notification emails (the queue
-  worker boots the same hooks).
-- The Swift mailer is wrapped by `AuditSwiftMailer`
-  (`src/Mail/AuditSwiftMailer.php`). It finalises the row as `sent` or
-  `failed` and records the exception class/message when the send throws.
-  Because the wrapper extends `Swift_Mailer` itself, it also sees failures
-  thrown while the transport is being started (SMTP connection refused,
-  authentication errors, ...) and the `RfcComplianceException` case that
-  `Swift_Mailer` swallows internally (invalid addresses, transport returns
-  0). A late `MessageSent` event can never flip a failure back to `sent`.
+- `Illuminate\Mail\Events\MessageSending` — the fully rendered
+  `Symfony\Component\Mime\Email` is stored as a `pending` row before it is
+  handed to the transport. This works for immediate sends as well as for
+  queued notification emails (the queue worker boots the same hooks).
+- The Symfony transport is wrapped by `AuditTransport`
+  (`src/Mail/AuditTransport.php`). It finalises the row as `sent` or `failed`
+  and records the exception class/message when the send throws. Because the
+  wrapper sits around the transport, it also sees failures thrown while the
+  transport is being used (SMTP connection refused, authentication errors, …).
+  A late `MessageSent` event can never flip a failure back to `sent`.
+- A `Message-ID` is generated at capture time if the message does not carry
+  one yet, so the audit row references the same ID that ends up in the
+  delivered email (matching it against mail server logs).
 - Rows that remain `pending` (process killed, another listener cancelled the
   send, ...) are finalised as `failed` by the scheduled prune task.
 
@@ -105,12 +111,13 @@ All endpoints require an admin session.
 
 One table is created by the migration: `mail_audit_logs` (prefixed with your
 configured `database.prefix`), storing metadata, bodies (truncated at 1 MB),
-headers and attachment metadata as JSON.
+headers and attachment metadata as JSON. MySQL/MariaDB, PostgreSQL and SQLite
+are supported.
 
 ## Requirements
 
-- PHP 7.4+
-- Flarum `^1.2`
+- PHP 8.3+
+- Flarum `^2.0`
 
 ## About this fork
 

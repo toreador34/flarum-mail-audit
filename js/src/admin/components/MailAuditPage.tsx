@@ -1,5 +1,5 @@
 import app from 'flarum/admin/app';
-import Component from 'flarum/common/Component';
+import Page from 'flarum/common/components/Page';
 import Button from 'flarum/common/components/Button';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import Select from 'flarum/common/components/Select';
@@ -9,15 +9,16 @@ import MailDetailModal from './MailDetailModal';
 import MailAuditState from '../states/MailAuditState';
 import { formatAddress, formatAddressList, recipientsLine, statusKey, statusLabel, truncate } from '../utils/format';
 
-export default class MailAuditPage extends Component {
+export default class MailAuditPage extends Page {
   state = new MailAuditState();
   autoRefresh = false;
   autoRefreshInterval: any = null;
   searchValue = '';
   searchTimer: any = null;
 
-  onremove() {
+  onremove(vnode: any) {
     this.stopAutoRefresh();
+    super.onremove(vnode);
   }
 
   startAutoRefresh() {

@@ -315,12 +315,12 @@ class MailAuditRepository
         try {
             $rows = $this->db->table(self::TABLE)
                 ->select('status')
-                ->selectRaw('COUNT(*) AS count')
+                ->selectRaw('COUNT(*) AS aggregate')
                 ->groupBy('status')
                 ->get();
 
             foreach ($rows ?: [] as $row) {
-                $count = (int) $row->count;
+                $count = (int) $row->aggregate;
                 $stats['total'] += $count;
 
                 $key = (string) $row->status;

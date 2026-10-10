@@ -12,8 +12,9 @@ namespace Toreador\MailAudit\Provider;
 use Flarum\Foundation\AbstractServiceProvider;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Illuminate\Contracts\Container\Container;
-use Toreador\MailAudit\Mail\AuditSwiftMailer;
-use Toreador\MailAudit\Mail\SwiftMessageExtractor;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Toreador\MailAudit\Mail\AuditTransport;
+use Toreador\MailAudit\Mail\SymfonyMessageExtractor;
 use Toreador\MailAudit\MailAuditRecorder;
 use Toreador\MailAudit\MailAuditRepository;
 
@@ -28,41 +29,37 @@ class MailAuditServiceProvider extends AbstractServiceProvider
             );
         });
 
-        $this->container->singleton(SwiftMessageExtractor::class);
+        $this->container->singleton(SymfonyMessageExtractor::class);
 
         $this->container->singleton(MailAuditRecorder::class, function (Container $container) {
             return new MailAuditRecorder(
                 $container->make(MailAuditRepository::class),
-                $container->make(SwiftMessageExtractor::class),
+                $container->make(SymfonyMessageExtractor::class),
                 $container->make(SettingsRepositoryInterface::class),
                 $container->has('log') ? $container->make('log') : null
             );
         });
 
-        $this->extendSwiftMailer();
+        $this->extendSymfonyTransport();
     }
 
     /**
-     * Wrap the Swift mailer so failed sends can be recorded as well.
+     * Wrap the Symfony mail transport so failed sends can be recorded as well.
      *
-     * `swift.mailer` is resolved lazily by Flarum's mail service provider,
-     * so decorating the binding here is enough for web requests as well as
-     * for queue workers processing queued notification emails.
+     * Flarum 2.x binds `symfony.mailer.transport` as a singleton and resolves
+     * it lazily when the mailer is built, so decorating the binding here is
+     * enough for web requests as well as for queue workers processing queued
+     * notification emails.
      */
-    protected function extendSwiftMailer(): void
+    protected function extendSymfonyTransport(): void
     {
-        if (! class_exists('Swift_Mailer')) {
-            // Flarum 2.x dropped Swift Mailer; the event listeners still work.
-            return;
-        }
-
-        $this->container->extend('swift.mailer', function ($mailer, Container $container) {
-            if (! $mailer instanceof \Swift_Mailer) {
-                return $mailer;
+        $this->container->extend('symfony.mailer.transport', function ($transport, Container $container) {
+            if (! $transport instanceof TransportInterface) {
+                return $transport;
             }
 
-            return new AuditSwiftMailer(
-                $mailer->getTransport(),
+            return new AuditTransport(
+                $transport,
                 $container->make(MailAuditRecorder::class)
             );
         });

@@ -13,15 +13,17 @@ use Carbon\Carbon;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use Toreador\MailAudit\Mail\SwiftMessageExtractor;
+use Toreador\MailAudit\Mail\SymfonyMessageExtractor;
 
 /**
- * Glue between the mail events / transport wrapper and the database.
+ * Glue between the mail pipeline and the database.
  *
- * A message is captured when Illuminate fires MessageSending (the full
- * message is already built at that point) and its row is finalised either by
- * AuditTransport (authoritative, also sees failures) or by the MessageSent
- * event as a fallback.
+ * A message is captured by AuditTransport, the one place every send passes
+ * through: in Flarum 2.x core's MutateEmail listener returns early from the
+ * MessageSending event (which Laravel dispatches with until()), so extension
+ * listeners registered after it are never called. The same transport then
+ * finalises the row (authoritative, also sees failures); the MessageSent
+ * listener is kept as a fallback.
  */
 class MailAuditRecorder
 {
@@ -31,7 +33,7 @@ class MailAuditRecorder
     protected $repository;
 
     /**
-     * @var SwiftMessageExtractor
+     * @var SymfonyMessageExtractor
      */
     protected $extractor;
 
@@ -60,7 +62,7 @@ class MailAuditRecorder
 
     public function __construct(
         MailAuditRepository $repository,
-        SwiftMessageExtractor $extractor,
+        SymfonyMessageExtractor $extractor,
         SettingsRepositoryInterface $settings,
         ?LoggerInterface $logger = null
     ) {
@@ -92,7 +94,18 @@ class MailAuditRecorder
             return null;
         }
 
+        $objectId = spl_object_id($message);
+
+        // The same message object may pass multiple capture points (the
+        // MessageSending listener and the transport decorator); never insert
+        // the same object twice.
+        if (isset($this->tracked[$objectId])) {
+            return $this->tracked[$objectId];
+        }
+
         try {
+            $this->extractor->ensureMessageId($message);
+
             $fields = $this->extractor->extract($message);
 
             if (! $this->capturesBody()) {
@@ -109,7 +122,7 @@ class MailAuditRecorder
             $id = $this->repository->insert($fields);
 
             if ($id !== null) {
-                $this->tracked[spl_object_id($message)] = $id;
+                $this->tracked[$objectId] = $id;
             }
 
             return $id;
@@ -162,7 +175,7 @@ class MailAuditRecorder
                 unset($this->tracked[$objectId]);
             }
 
-            $messageId = method_exists($message, 'getId') ? (string) $message->getId() : null;
+            $messageId = $this->extractor->messageId($message);
             $errorText = $error !== null ? $this->formatError($error) : null;
 
             if ($id !== null) {

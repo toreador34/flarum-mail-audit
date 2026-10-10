@@ -7,11 +7,11 @@ import { formatAddressList, formatBytes, statusKey, statusLabel } from '../utils
 export default class MailDetailModal extends Modal {
   id!: number;
   detail: any = null;
-  loading = true;
 
   oninit(vnode: any) {
     super.oninit(vnode);
     this.id = vnode.attrs.id;
+    this.loading = true;
     this.fetch();
   }
 
