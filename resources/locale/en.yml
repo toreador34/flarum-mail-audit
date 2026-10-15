@@ -13,18 +13,107 @@ toreador-flarum-mail-audit:
       enabled_label: Record outgoing emails
       enabled_help: |
         When enabled, every email handed to the mail driver is stored in the
-        database (sender, recipients, subject, body and headers) before it is
-        sent. Disable this to stop recording immediately.
+        database (sender, recipients, subject, headers and, depending on the
+        settings below, the body) before it is sent. Disable this to stop
+        recording immediately.
       capture_body_label: Store message bodies
       capture_body_help: |
-        When enabled, the rendered HTML and plain text bodies are stored as
-        well. Disable it to keep only metadata (sender, recipients, subject,
-        headers). Useful for privacy-sensitive forums or to save space.
+        When enabled, email bodies (HTML and plain text) are stored; which
+        messages get their bodies stored is controlled by "Body scope" below.
+        For data minimisation the default only keeps bodies of Flarum's own
+        automatic mails. Disable to keep metadata only.
+      body_scope_label: Body scope
+      body_scope_help: |
+        With "Core automatic mails only", bodies are stored only for Flarum's
+        own automatic mails (notifications, password reset, email
+        confirmation); emails sent by other extensions are recorded as
+        metadata only. Detection relies on the core `List-Unsubscribe` header
+        and the `/reset`, `/confirm` link patterns (not an exact split).
+      body_scope_system: Core automatic mails only (recommended)
+      body_scope_all: All outgoing emails
+      redact_tokens_label: Mask links and tokens
+      redact_tokens_help: |
+        When enabled, one-time access links and tokens (password reset, email
+        confirmation, notification unsubscribe) in stored bodies and headers
+        are replaced with [redacted]. This prevents a database leak from
+        becoming account takeover material. Disable temporarily if you need
+        the full content for debugging.
+      retention_enabled_label: Enable automatic retention deletion
+      retention_enabled_help: |
+        When enabled, entries older than the configured number of days are
+        deleted by the daily `mail-audit:prune` task. Disable to keep entries
+        indefinitely; you can still run deletion manually from the audit page.
       retention_days_label: Retention (days)
       retention_days_help: |
-        Entries older than this many days are deleted by the daily
-        `mail-audit:prune` scheduled task. Enter 0 to keep entries forever.
-        Default: 30.
+        Entries older than this many days are deleted when automatic retention
+        is enabled. Default: 30. The Flarum scheduler (cron) must be running
+        for the daily task; you can also use the "Apply now" button on the
+        audit page at any time.
+      privacy_label: Privacy policy draft
+      privacy_help: |
+        The text below is a draft you can add to your privacy policy or
+        privacy notice; fill in the bracketed fields with your forum's
+        details. It adapts automatically to your body scope and retention
+        settings. This draft is not legal advice; have it reviewed by a
+        professional before publishing.
+      privacy_copy: Copy draft
+      privacy_copied: Draft copied to clipboard.
+      privacy_retention_on: |
+        Records are kept for a maximum of {days} day(s) necessary for the
+        purpose and are deleted automatically afterwards.
+      privacy_retention_off: |
+        Records are deleted upon the data subject's erasure request or through
+        the controller's periodic erasure process.
+      privacy_body_system: |
+        Message bodies are stored only for Flarum's own automatic notification
+        and account emails (e.g. new notifications, password reset, email
+        confirmation) and only where technically necessary; access links and
+        tokens in those bodies are masked before they are stored. Emails sent
+        through other extensions are stored as metadata only.
+      privacy_body_all: |
+        Message bodies (HTML and plain text) are stored; access links and
+        tokens in the bodies are masked before storage.
+      privacy_body_none: |
+        Message bodies are not stored; only metadata (addresses, subject,
+        technical headers) is kept.
+      privacy_draft: |
+        PRIVACY NOTICE - OUTGOING EMAIL LOGS
+
+        Data Controller: [FORUM NAME / LEGAL ENTITY]
+        Contact: [EMAIL ADDRESS]
+
+        We log outgoing emails to verify their technical delivery, monitor
+        deliverability, diagnose failures and maintain information security.
+        The logs contain sender and recipient email addresses and display
+        names, the subject line, technical email headers, delivery status and
+        any error information. {body}
+
+        This processing is carried out under Art. 5/2-f of the Turkish KVKK
+        (legitimate interest) and Art. 6(1)(f) GDPR, without prejudice to your
+        fundamental rights and freedoms and in accordance with the principle
+        of proportionality. The logs are not shared with third parties and are
+        not transferred abroad.
+
+        RETENTION
+        {retention}
+
+        SPECIAL CATEGORY PERSONAL DATA
+        Email contents may inadvertently include special category personal
+        data (e.g. health, religion, ethnic origin, biometric data). Such data
+        is processed solely for the record-keeping purpose described above and
+        on the basis of your explicit consent below; it is not used for any
+        other purpose. By using the forum or registering, you are deemed to
+        have given explicit consent to the retention of technical records of
+        outgoing emails as described above and to the processing of any
+        special category personal data they may contain. You may withdraw your
+        consent at any time by contacting [EMAIL ADDRESS]; the relevant
+        records will then be deleted.
+
+        YOUR RIGHTS
+        Under Art. 11 KVKK and the GDPR you have the right to learn whether
+        your personal data is processed, to request information about it, to
+        request rectification, erasure or anonymisation, and to object to
+        processing. Requests can be sent to [EMAIL ADDRESS].
 
     page:
       title: Mail Audit
@@ -58,6 +147,27 @@ toreador-flarum-mail-audit:
       clear_all: Clear all
       clear_all_help: Permanently delete every mail audit entry.
       clear_all_confirm: All mail audit entries will be permanently deleted. This cannot be undone. Continue?
+
+    compliance:
+      title: Compliance tools
+      subtitle: Manage retention and erasure operations under the GDPR and KVKK from here.
+      retention_title: Retention
+      retention_description_on: "Automatic deletion: enabled · Window: {days} day(s)"
+      retention_description_off: "Automatic deletion: disabled · Window: {days} day(s)"
+      retention_apply: Apply retention now
+      retention_confirm: "Every mail audit entry older than {days} day(s) will be permanently deleted. Continue?"
+      retention_applied: "Deleted {count} entries older than {days} day(s)."
+      retention_no_days: No valid retention window is configured. Set a value of 1 day or more in the settings section.
+      purge_title: Data subject request (delete by email)
+      purge_description: |
+        For erasure requests under GDPR Art. 17 / KVKK m. 7, permanently
+        delete every audit entry matching the email address (sender, to, cc
+        or bcc).
+      purge_placeholder: user@example.com
+      purge_button: Delete entries for this address
+      purge_confirm: "Every mail audit entry matching \"{email}\" will be permanently deleted. This cannot be undone. Continue?"
+      purged: "Deleted {count} entries matching \"{email}\"."
+      purge_invalid: Please enter a valid email address.
 
     table:
       id: ID
@@ -101,5 +211,6 @@ toreador-flarum-mail-audit:
       preview_text: Text version
       headers: Headers
       no_body: |
-        No body was stored for this email. Either the message had no body, or
-        "Store message bodies" is disabled in the extension settings.
+        No body was stored for this email. Reasons: the message had no body;
+        "Store message bodies" is disabled; or the body scope is "core
+        automatic mails only" and this email was sent by another extension.

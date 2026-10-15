@@ -380,6 +380,46 @@ class MailAuditRepository
         }
     }
 
+    /**
+     * Delete every entry whose from/to/cc/bcc address list contains the given
+     * address. Used to honour erasure requests (GDPR Art. 17 / KVKK m. 7)
+     * without clearing the whole audit trail.
+     */
+    public function purgeByEmail(string $email): int
+    {
+        if (! $this->tableExists()) {
+            return 0;
+        }
+
+        $email = trim($email);
+
+        if ($email === '') {
+            return 0;
+        }
+
+        try {
+            $like = '%'.$email.'%';
+
+            return (int) $this->db->table(self::TABLE)
+                ->where(function ($q) use ($like) {
+                    $columns = ['from_json', 'to_json', 'cc_json', 'bcc_json'];
+
+                    foreach ($columns as $i => $column) {
+                        if ($i === 0) {
+                            $q->where($column, 'like', $like);
+                        } else {
+                            $q->orWhere($column, 'like', $like);
+                        }
+                    }
+                })
+                ->delete();
+        } catch (Throwable $e) {
+            $this->logError('Could not purge mail audit rows by email', $e);
+
+            return 0;
+        }
+    }
+
     protected function decode($value): array
     {
         if (! is_string($value) || $value === '') {

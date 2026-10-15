@@ -7,6 +7,7 @@ import Switch from 'flarum/common/components/Switch';
 import humanTime from 'flarum/common/utils/humanTime';
 import MailDetailModal from './MailDetailModal';
 import MailAuditState from '../states/MailAuditState';
+import { isSettingOn, settingValue } from '../utils/settings';
 import { formatAddress, formatAddressList, recipientsLine, statusKey, statusLabel, truncate } from '../utils/format';
 
 export default class MailAuditPage extends Page {
@@ -15,6 +16,7 @@ export default class MailAuditPage extends Page {
   autoRefreshInterval: any = null;
   searchValue = '';
   searchTimer: any = null;
+  purgeEmail = '';
 
   onremove(vnode: any) {
     this.stopAutoRefresh();
@@ -68,6 +70,37 @@ export default class MailAuditPage extends Page {
     this.state.clear();
   }
 
+  applyRetentionClick() {
+    const days = parseInt(String(settingValue('retention_days', 30)), 10) || 0;
+
+    if (days < 1) {
+      app.alerts.show({ type: 'error' }, app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_no_days'));
+      return;
+    }
+
+    if (!this.confirm(app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_confirm', { days }) as string)) return;
+
+    this.state.runRetention();
+  }
+
+  purgeByEmailClick() {
+    const email = this.purgeEmail.trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      app.alerts.show({ type: 'error' }, app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purge_invalid'));
+      return;
+    }
+
+    if (!this.confirm(app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purge_confirm', { email }) as string)) return;
+
+    this.state.purgeByEmail(email).then((ok) => {
+      if (ok) {
+        this.purgeEmail = '';
+        m.redraw();
+      }
+    });
+  }
+
   recordingDisabled(): boolean {
     const value = (app.data.settings as any)['toreador-flarum-mail-audit.enabled'];
     return value === false || value === '0' || value === 0;
@@ -85,6 +118,7 @@ export default class MailAuditPage extends Page {
           {this.toolbar()}
           {this.table()}
           {this.pagination()}
+          {this.compliance()}
         </div>
       </div>
     );
@@ -282,6 +316,82 @@ export default class MailAuditPage extends Page {
           onclick={() => s.nextPage()}
           disabled={s.loading || !s.hasMore}
         />
+      </div>
+    );
+  }
+
+  compliance() {
+    return (
+      <div className="MailAuditPage-compliance">
+        <h3>{app.translator.trans('toreador-flarum-mail-audit.admin.compliance.title')}</h3>
+        <p className="helpText">{app.translator.trans('toreador-flarum-mail-audit.admin.compliance.subtitle')}</p>
+        <div className="MailAuditPage-compliance-cards">
+          {this.retentionCard()}
+          {this.purgeCard()}
+        </div>
+      </div>
+    );
+  }
+
+  retentionCard() {
+    const enabled = isSettingOn('retention_enabled', true);
+    const days = parseInt(String(settingValue('retention_days', 30)), 10) || 0;
+    const s = this.state;
+
+    return (
+      <div className="MailAuditPage-compliance-card">
+        <h4>{app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_title')}</h4>
+        <p className="MailAuditPage-compliance-status">
+          {app.translator.trans(
+            'toreador-flarum-mail-audit.admin.compliance.' + (enabled ? 'retention_description_on' : 'retention_description_off'),
+            { days }
+          )}
+        </p>
+        <Button
+          className="Button"
+          icon="fas fa-broom"
+          onclick={() => this.applyRetentionClick()}
+          disabled={s.loading}
+          title={app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_apply')}
+        >
+          {app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_apply')}
+        </Button>
+      </div>
+    );
+  }
+
+  purgeCard() {
+    const s = this.state;
+
+    return (
+      <div className="MailAuditPage-compliance-card">
+        <h4>{app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purge_title')}</h4>
+        <p className="helpText">{app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purge_description')}</p>
+        <div className="MailAuditPage-compliance-purge">
+          <input
+            className="FormControl"
+            type="email"
+            placeholder={app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purge_placeholder') as string}
+            value={this.purgeEmail}
+            oninput={(e: any) => {
+              this.purgeEmail = e.target.value;
+            }}
+            onkeydown={(e: any) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                this.purgeByEmailClick();
+              }
+            }}
+          />
+          <Button
+            className="Button Button--danger"
+            icon="fas fa-user-slash"
+            onclick={() => this.purgeByEmailClick()}
+            disabled={s.loading}
+          >
+            {app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purge_button')}
+          </Button>
+        </div>
       </div>
     );
   }

@@ -14,18 +14,114 @@ toreador-flarum-mail-audit:
       enabled_help: |
         Etkinleştirildiğinde, posta sürücüsüne verilen her e-posta
         gönderilmeden önce veritabanına kaydedilir (gönderen, alıcılar, konu,
-        gövde ve başlıklar). Kaydı hemen durdurmak için devre dışı bırakın.
+        başlıklar ve aşağıdaki ayarlara göre gövde). Kaydı hemen durdurmak
+        için devre dışı bırakın.
       capture_body_label: Mesaj gövdelerini sakla
       capture_body_help: |
-        Etkinleştirildiğinde, oluşturulan HTML ve düz metin gövdeleri de
-        saklanır. Yalnızca üst veriyi (gönderen, alıcılar, konu, başlıklar)
-        tutmak için devre dışı bırakın. Gizliliğe duyarlı forumlar veya yer
-        tasarrufu için kullanışlıdır.
+        Etkinleştirildiğinde, e-posta gövdeleri (HTML ve düz metin) saklanır;
+        hangi maillerin gövdelerinin saklanacağını aşağıdaki "Gövde kapsamı"
+        ayarı belirler. Kişisel veri minimizasyonu için varsayılan olarak
+        yalnızca çekirdek otomatik maillerin gövdeleri tutulur. Yalnızca üst
+        veriyi saklamak için bunu devre dışı bırakın.
+      body_scope_label: Gövde kapsamı
+      body_scope_help: |
+        "Yalnızca çekirdek otomatik mailler" seçildiğinde, gövdeler sadece
+        Flarum'un kendi ürettiği bildirim, şifre sıfırlama ve e-posta
+        doğrulama gibi otomatik maillerde saklanır; diğer eklentilerin
+        gönderdiği e-postalarda yalnızca üst veri kaydedilir. Tespit, çekirdek
+        eklentinin eklediği `List-Unsubscribe` başlığı ve `/reset`, `/confirm`
+        bağlantı kalıplarına dayanır (kesin ayrım garanti edilemez).
+      body_scope_system: Yalnızca çekirdek otomatik mailler (önerilen)
+      body_scope_all: Tüm giden mailler
+      redact_tokens_label: Bağlantı ve jetonları maskele
+      redact_tokens_help: |
+        Etkinleştirildiğinde, kaydedilen gövde ve başlıklardaki tek
+        kullanımlık erişim bağlantıları ve jetonları (şifre sıfırlama,
+        e-posta doğrulama, bildirim aboneliğinden çıkma) [redacted] ile
+        değiştirilir. Veritabanı sızıntısı hâlinde hesapların ele
+        geçirilmesini engeller. Hata ayıklama için tam içerik gerekiyorsa
+        geçici olarak devre dışı bırakabilirsiniz.
+      retention_enabled_label: Otomatik saklama silmeyi etkinleştir
+      retention_enabled_help: |
+        Etkinleştirildiğinde, aşağıda girilen günden eski kayıtlar günlük
+        `mail-audit:prune` görevi tarafından otomatik silinir. Saklamayı
+        süresiz durdurmak için devre dışı bırakın; yine de denetim
+        sayfasından silmeyi elle çalıştırabilirsiniz.
       retention_days_label: Saklama süresi (gün)
       retention_days_help: |
-        Bu günden eski kayıtlar, günlük çalışan `mail-audit:prune` planlı
-        görevi tarafından silinir. Kayıtları sonsuza kadar tutmak için 0
-        girin. Varsayılan: 30.
+        Otomatik silme etkinken bu günden eski kayıtlar silinir. Varsayılan:
+        30. Silmenin düzenli çalışması için Flarum zamanlayıcısının (cron)
+        çalışıyor olması gerekir; dilediğiniz an denetim sayfasındaki "Şimdi
+        uygula" düğmesini de kullanabilirsiniz.
+      privacy_label: Gizlilik politikası taslağı
+      privacy_help: |
+        Aşağıdaki metin, gizlilik politikanıza veya aydınlatma metninize
+        ekleyebileceğiniz bir taslaktır; köşeli parantezli alanları forum
+        bilgilerinizle doldurun. Metin; gövde kapsamı ve saklama süresi
+        ayarlarınıza göre otomatik olarak uyarlanır. Bu taslak hukuki
+        danışmanlık yerine geçmez; yayınlamadan önce bir uzmana inceletmeniz
+        önerilir.
+      privacy_copy: Taslağı kopyala
+      privacy_copied: Taslak panoya kopyalandı.
+      privacy_retention_on: |
+        Kayıtlar, amaç için gerekli olan azami {days} gün saklanır ve süre
+        sonunda otomatik olarak silinir.
+      privacy_retention_off: |
+        Kayıtlar; ilgili kişinin silme talebi veya veri sorumlusunun
+        periyodik imha işlemiyle silinir.
+      privacy_body_system: |
+        Mesaj gövdeleri yalnızca Flarum'un kendi otomatik bildirim ve hesap
+        işlem e-postalarında (ör. yeni bildirim, şifre sıfırlama, e-posta
+        doğrulama) ve yalnızca teknik ihtiyaç hâlinde kaydedilir; bu
+        gövdelerdeki erişim bağlantıları ve jetonlar kaydedilmeden önce
+        otomatik olarak maskelenir. Diğer eklentiler aracılığıyla gönderilen
+        e-postalarda mesaj gövdesi kaydedilmez.
+      privacy_body_all: |
+        Mesaj gövdeleri (HTML ve düz metin) kaydedilir; gövdelerdeki erişim
+        bağlantıları ve jetonlar kaydedilmeden önce otomatik olarak
+        maskelenir.
+      privacy_body_none: |
+        Mesaj gövdeleri kaydedilmez; yalnızca üst veriler (adresler, konu,
+        teknik başlıklar) saklanır.
+      privacy_draft: |
+        GİDEN E-POSTA KAYITLARI HAKKINDA AYDINLATMA
+
+        Veri Sorumlusu: [FORUM ADI / TÜZEL KİŞİ ADI]
+        İletişim: [E-POSTA ADRESİ]
+
+        Forumumuz; gönderilen e-postaların teknik doğrulamasını yapmak,
+        teslim edilebilirliği izlemek, arızaları tespit etmek ve bilgi
+        güvenliğini sağlamak amacıyla giden e-postaları kayıt altına alır.
+        Kayıtlar; gönderen ve alıcı e-posta adresleri ile görünen adları, konu
+        satırı, teknik e-posta başlıkları, gönderim durumu ve varsa hata
+        bilgisini içerir. {body}
+
+        İşleme faaliyeti, 6698 sayılı KVKK m. 5/2-f (meşru menfaat) ve GDPR
+        m. 6(1)(f) kapsamında; temel hak ve özgürlüklerinize zarar vermemek ve
+        ölçülülük ilkesine uygun olarak yürütülür. Kayıtlar üçüncü kişilerle
+        paylaşılmaz, yurt dışına aktarılmaz.
+
+        SAKLAMA SÜRESİ
+        {retention}
+
+        ÖZEL NİTELİKLİ KİŞİSEL VERİLER
+        E-posta içerikleri, istenmeden özel nitelikli kişisel veri (sağlık,
+        din, etnik köken, biyometrik veri vb.) içerebilir. Bu tür veriler
+        yalnızca yukarıda açıklanan kayıt tutma amacıyla sınırlı olarak ve
+        aşağıdaki açık rızanız kapsamında işlenir; başka hiçbir amaçla
+        kullanılmaz. Forumu kullanmanız veya üye olmanız hâlinde, giden
+        e-postalara ilişkin teknik kayıtların yukarıdaki kapsamda tutulmasına
+        ve bu kayıtlarda yer alabilecek özel nitelikli kişisel verilerin
+        işlenmesine açık rıza verdiğinizi kabul etmiş sayılırsınız. Açık
+        rızanızı dilediğiniz zaman [E-POSTA ADRESİ] üzerinden geri
+        çekebilirsiniz; bu hâlde ilgili kayıtlar silinir.
+
+        HAKLARINIZ
+        KVKK m. 11 ve GDPR kapsamında; kişisel verilerinizin işlenip
+        işlenmediğini öğrenme, işlenmişse buna ilişkin bilgi talep etme,
+        düzeltilmesini, silinmesini veya anonim hâle getirilmesini isteme ile
+        işlemeye itiraz etme haklarına sahipsiniz. Talepleriniz için
+        [E-POSTA ADRESİ] adresine başvurabilirsiniz.
 
     page:
       title: E-posta Denetimi
@@ -59,6 +155,27 @@ toreador-flarum-mail-audit:
       clear_all: Tümünü Temizle
       clear_all_help: Tüm e-posta denetim kayıtlarını kalıcı olarak sil.
       clear_all_confirm: Tüm e-posta denetim kayıtları kalıcı olarak silinsin mi? Bu işlem geri alınamaz.
+
+    compliance:
+      title: Uyum araçları
+      subtitle: KVKK ve GDPR kapsamındaki saklama ve silme işlemlerini buradan yönetin.
+      retention_title: Saklama süresi
+      retention_description_on: "Otomatik silme: etkin · Süre: {days} gün"
+      retention_description_off: "Otomatik silme: devre dışı · Süre: {days} gün"
+      retention_apply: Saklama süresini şimdi uygula
+      retention_confirm: "{days} günden eski tüm e-posta denetim kayıtları kalıcı olarak silinecek. Devam edilsin mi?"
+      retention_applied: "{days} günden eski {count} kayıt silindi."
+      retention_no_days: Geçerli bir saklama süresi tanımlı değil. Ayarlar bölümünden 1 veya daha büyük bir gün değeri girin.
+      purge_title: Veri sahibi talebi (e-posta ile sil)
+      purge_description: |
+        KVKK m. 7 ve GDPR m. 17 kapsamındaki silme taleplerinde, ilgili
+        e-posta adresine ait tüm denetim kayıtlarını (gönderen, alıcı, cc,
+        bcc) kalıcı olarak silin.
+      purge_placeholder: kullanici@ornek.com
+      purge_button: Bu adrese ait kayıtları sil
+      purge_confirm: "\"{email}\" adresiyle eşleşen tüm e-posta denetim kayıtları kalıcı olarak silinsin mi? Bu işlem geri alınamaz."
+      purged: "\"{email}\" ile eşleşen {count} kayıt silindi."
+      purge_invalid: Geçerli bir e-posta adresi girin.
 
     table:
       id: Kimlik
@@ -102,5 +219,7 @@ toreador-flarum-mail-audit:
       preview_text: Düz metin sürümü
       headers: Başlıklar
       no_body: |
-        Bu e-posta için gövde saklanmamış. Ya mesajın gövdesi yoktu ya da
-        eklenti ayarlarında "Mesaj gövdelerini sakla" devre dışı bırakılmış.
+        Bu e-posta için gövde saklanmamış. Nedenleri: mesajın gövdesi yoktu;
+        "Mesaj gövdelerini sakla" devre dışı bırakılmış; ya da gövde kapsamı
+        "yalnızca çekirdek otomatik mailler" olduğu hâlde bu e-posta başka
+        bir eklenti tarafından gönderilmiş.

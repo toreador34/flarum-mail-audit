@@ -40,7 +40,7 @@ class PruneMailAuditCommand extends AbstractCommand
         $this
             ->setName('mail-audit:prune')
             ->setDescription('Finalises stale mail audit entries and deletes entries older than the configured retention period.')
-            ->addOption('days', null, InputOption::VALUE_REQUIRED, 'Override the retention in days (0 keeps everything).')
+            ->addOption('days', null, InputOption::VALUE_REQUIRED, 'Override the retention in days and force a one-off prune even when automatic retention is disabled (0 keeps everything).')
             ->addOption('stale-minutes', null, InputOption::VALUE_REQUIRED, 'Mark pending entries older than this many minutes as failed.', '15');
     }
 
@@ -59,6 +59,14 @@ class PruneMailAuditCommand extends AbstractCommand
         $days = $this->input->getOption('days');
 
         if ($days === null) {
+            $enabled = filter_var($this->settings->get('toreador-flarum-mail-audit.retention_enabled', true), FILTER_VALIDATE_BOOLEAN);
+
+            if (! $enabled) {
+                $this->info('Automatic retention deletion is disabled; nothing was deleted. Use --days=N to force a one-off prune.');
+
+                return Command::SUCCESS;
+            }
+
             $days = (int) $this->settings->get('toreador-flarum-mail-audit.retention_days', 30);
         }
 

@@ -1,7 +1,7 @@
 {
     "private": true,
     "name": "@toreador/mail-audit",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "prettier": "@flarum/prettier-config",
     "dependencies": {
         "flarum-tsconfig": "^2.0.0",

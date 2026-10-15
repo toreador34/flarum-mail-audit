@@ -16,6 +16,8 @@ use Illuminate\Mail\Events\MessageSent;
 use Toreador\MailAudit\Api\Controller\ClearMailsController;
 use Toreador\MailAudit\Api\Controller\DeleteMailController;
 use Toreador\MailAudit\Api\Controller\ListMailsController;
+use Toreador\MailAudit\Api\Controller\PruneMailsController;
+use Toreador\MailAudit\Api\Controller\PurgeMailsController;
 use Toreador\MailAudit\Api\Controller\ShowMailController;
 use Toreador\MailAudit\Console\PruneMailAuditCommand;
 use Toreador\MailAudit\Listener\CaptureOutgoingMail;
@@ -35,6 +37,9 @@ return [
     (new Extend\Settings())
         ->default('toreador-flarum-mail-audit.enabled', true)
         ->default('toreador-flarum-mail-audit.capture_body', true)
+        ->default('toreador-flarum-mail-audit.body_scope', 'system')
+        ->default('toreador-flarum-mail-audit.redact_tokens', true)
+        ->default('toreador-flarum-mail-audit.retention_enabled', true)
         ->default('toreador-flarum-mail-audit.retention_days', 30),
 
     (new Extend\Event())
@@ -50,6 +55,8 @@ return [
     (new Extend\Routes('api'))
         ->get('/mail-audit/mails', 'toreador-flarum-mail-audit.mails', ListMailsController::class)
         ->post('/mail-audit/mails/clear', 'toreador-flarum-mail-audit.mails.clear', ClearMailsController::class)
+        ->post('/mail-audit/mails/purge', 'toreador-flarum-mail-audit.mails.purge', PurgeMailsController::class)
+        ->post('/mail-audit/mails/prune', 'toreador-flarum-mail-audit.mails.prune', PruneMailsController::class)
         ->get('/mail-audit/mails/{id}', 'toreador-flarum-mail-audit.mail', ShowMailController::class)
         ->delete('/mail-audit/mails/{id}', 'toreador-flarum-mail-audit.mail.delete', DeleteMailController::class),
 ];

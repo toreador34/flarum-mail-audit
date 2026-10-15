@@ -86,6 +86,53 @@ class SymfonyMessageExtractor
     }
 
     /**
+     * Whether the message can be identified as one of Flarum's own automatic
+     * mails: notification emails and account emails (password reset, email
+     * confirmation).
+     *
+     * This is a heuristic. Flarum core adds a `List-Unsubscribe` header
+     * pointing at the `/notifications/unsubscribe/` route to every
+     * notification mail (see core's MutateEmail listener), and its account
+     * mails embed the core `/reset/` or `/confirm/` token routes in the
+     * rendered body. Messages without any of these markers are treated as
+     * "not system mail" so that extensions sending arbitrary mail (newsletters,
+     * contact forms, ...) do not get their bodies stored.
+     *
+     * @param mixed $message A Symfony\Component\Mime\Email instance.
+     */
+    public function isSystemMail($message): bool
+    {
+        try {
+            if (! $message instanceof Message) {
+                return false;
+            }
+
+            $headers = $message->getHeaders();
+
+            if ($headers->has('List-Unsubscribe')) {
+                return true;
+            }
+
+            foreach (['getHtmlBody', 'getTextBody'] as $method) {
+                $body = $this->content($this->call($message, $method));
+
+                if (is_string($body) && $this->containsSystemLink($body)) {
+                    return true;
+                }
+            }
+        } catch (Throwable $e) {
+            // A message we cannot inspect is treated as non-system: safer for privacy.
+        }
+
+        return false;
+    }
+
+    protected function containsSystemLink(string $body): bool
+    {
+        return (bool) preg_match('#/(?:reset|confirm|notifications/unsubscribe)/#i', $body);
+    }
+
+    /**
      * @param mixed $message A Symfony\Component\Mime\Email instance.
      * @return array<string, mixed>
      */

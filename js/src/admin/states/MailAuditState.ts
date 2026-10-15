@@ -143,6 +143,57 @@ export default class MailAuditState {
     }
   }
 
+  async runRetention(): Promise<boolean> {
+    try {
+      const res: any = await app.request({
+        method: 'POST',
+        url: this.apiBase + '/mails/prune',
+        body: {},
+      });
+
+      if (res && res.ok === false) {
+        app.alerts.show({ type: 'error' }, app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_no_days'));
+        return false;
+      }
+
+      app.alerts.show(
+        { type: 'success' },
+        app.translator.trans('toreador-flarum-mail-audit.admin.compliance.retention_applied', {
+          days: res.days,
+          count: res.deleted,
+        })
+      );
+      await this.load(true);
+      return true;
+    } catch (e) {
+      this.surfaceError(e);
+      return false;
+    }
+  }
+
+  async purgeByEmail(email: string): Promise<boolean> {
+    try {
+      const res: any = await app.request({
+        method: 'POST',
+        url: this.apiBase + '/mails/purge',
+        body: { email },
+      });
+
+      app.alerts.show(
+        { type: 'success' },
+        app.translator.trans('toreador-flarum-mail-audit.admin.compliance.purged', {
+          email: (res && res.email) || email,
+          count: (res && res.deleted) || 0,
+        })
+      );
+      await this.load(true);
+      return true;
+    } catch (e) {
+      this.surfaceError(e);
+      return false;
+    }
+  }
+
   surfaceError(e: any) {
     const reason = e && e.statusReason ? e.statusReason : String(e && e.message ? e.message : e);
     app.alerts.show({ type: 'error' }, reason);

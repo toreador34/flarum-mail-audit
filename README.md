@@ -62,6 +62,10 @@ Auditing is best-effort by design: if the database write fails, the email is
 still delivered and the error is written to the Flarum log (at most three
 times per process to avoid log flooding).
 
+Bodies are stored according to the `body_scope` setting and token-bearing
+links are masked before storage; see **Settings** and **Privacy & compliance**
+below.
+
 ## Admin page
 
 Open **Administration → Mail Audit**:
@@ -74,14 +78,38 @@ Open **Administration → Mail Audit**:
 - The **view** modal shows the metadata, the error (if any), attachment list,
   the HTML body rendered in a sandboxed iframe, the plain-text body and the
   raw MIME headers.
+- **Compliance tools** (below the table): apply the retention window
+  immediately, and delete every entry matching an email address (sender, to,
+  cc or bcc) for GDPR Art. 17 / KVKK m. 7 erasure requests.
 
 ## Settings
 
 | Setting | Default | Description |
 |---|---|---|
 | `toreador-flarum-mail-audit.enabled` | `1` | Record outgoing emails |
-| `toreador-flarum-mail-audit.capture_body` | `1` | Store HTML/text bodies (disable to keep only metadata) |
-| `toreador-flarum-mail-audit.retention_days` | `30` | Delete entries older than this (`0` = keep forever) |
+| `toreador-flarum-mail-audit.capture_body` | `1` | Store bodies (HTML/text); disable to keep only metadata |
+| `toreador-flarum-mail-audit.body_scope` | `system` | `system` stores bodies of Flarum's own automatic mails only (notifications, password reset, email confirmation — detected via the core `List-Unsubscribe` header and `/reset`, `/confirm` link patterns); `all` stores every outgoing body |
+| `toreador-flarum-mail-audit.redact_tokens` | `1` | Replace one-time links/tokens (reset, confirm, unsubscribe) in stored bodies and headers with `[redacted]` |
+| `toreador-flarum-mail-audit.retention_enabled` | `1` | Run automatic retention deletion |
+| `toreador-flarum-mail-audit.retention_days` | `30` | Delete entries older than this (`0` keeps everything) |
+
+## Privacy & compliance
+
+- The extension settings page includes a **privacy policy draft** (Turkish
+  and English) that adapts to the current body scope and retention settings,
+  covers the special category data notice with an explicit consent clause and
+  can be copied into your privacy policy / aydınlatma metni with one click.
+  It is a draft, not legal advice — have it reviewed before publishing.
+- **Data minimisation**: by default only Flarum's own automatic mails have
+  their bodies stored; mails sent by other extensions are recorded as
+  metadata only. Token-bearing links are masked before storage, so a
+  database leak cannot become account takeover material.
+- **Storage limitation**: retention defaults to 30 days and the daily
+  `mail-audit:prune` task enforces it; it can be disabled explicitly and
+  re-applied manually from the audit page.
+- **Erasure**: individual entries can be deleted from the list, and the
+  compliance tools provide a per-email bulk delete for data subject
+  requests.
 
 ## Pruning
 
@@ -89,12 +117,14 @@ A console command is registered and scheduled daily:
 
 ```
 php flarum mail-audit:prune                 # stale pending cleanup + retention
-php flarum mail-audit:prune --days=7        # override retention
+php flarum mail-audit:prune --days=7        # override retention and force a one-off prune
 php flarum mail-audit:prune --stale-minutes=5
 ```
 
-If you do not run the Flarum scheduler (`php flarum schedule:run`), call the
-command from cron yourself.
+If automatic retention is disabled, the scheduled run only finalises stale
+pending rows; a one-off prune can still be forced with `--days`. If you do
+not run the Flarum scheduler (`php flarum schedule:run`), call the command
+from cron yourself.
 
 ## API endpoints
 
@@ -106,6 +136,8 @@ All endpoints require an admin session.
 | GET | `/api/mail-audit/mails/:id` | Full entry (bodies, headers, attachments) |
 | DELETE | `/api/mail-audit/mails/:id` | Delete one entry |
 | POST | `/api/mail-audit/mails/clear` | Delete all (optional `status`, `older_than_days`) |
+| POST | `/api/mail-audit/mails/purge` | Delete all entries matching an email address (`email`) |
+| POST | `/api/mail-audit/mails/prune` | Apply the retention window now (optional `days`) |
 
 ## Database
 

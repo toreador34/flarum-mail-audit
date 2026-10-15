@@ -14,6 +14,7 @@ use Flarum\Settings\SettingsRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 use Toreador\MailAudit\Mail\SymfonyMessageExtractor;
+use Toreador\MailAudit\Mail\TokenRedactor;
 
 /**
  * Glue between the mail pipeline and the database.
@@ -36,6 +37,11 @@ class MailAuditRecorder
      * @var SymfonyMessageExtractor
      */
     protected $extractor;
+
+    /**
+     * @var TokenRedactor
+     */
+    protected $redactor;
 
     /**
      * @var SettingsRepositoryInterface
@@ -63,11 +69,13 @@ class MailAuditRecorder
     public function __construct(
         MailAuditRepository $repository,
         SymfonyMessageExtractor $extractor,
+        TokenRedactor $redactor,
         SettingsRepositoryInterface $settings,
         ?LoggerInterface $logger = null
     ) {
         $this->repository = $repository;
         $this->extractor = $extractor;
+        $this->redactor = $redactor;
         $this->settings = $settings;
         $this->logger = $logger;
     }
@@ -80,6 +88,76 @@ class MailAuditRecorder
     public function capturesBody(): bool
     {
         return filter_var($this->settings->get('toreador-flarum-mail-audit.capture_body', true), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Which messages get their bodies stored when body capture is enabled:
+     * `system` (default) only Flarum's own automatic mails, `all` every
+     * outgoing message.
+     */
+    public function bodyScope(): string
+    {
+        $scope = $this->settings->get('toreador-flarum-mail-audit.body_scope', 'system');
+
+        $scope = is_string($scope) ? strtolower(trim($scope)) : 'system';
+
+        return in_array($scope, ['system', 'all'], true) ? $scope : 'system';
+    }
+
+    public function redactsTokens(): bool
+    {
+        return filter_var($this->settings->get('toreador-flarum-mail-audit.redact_tokens', true), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * @param object $message
+     */
+    protected function shouldStoreBodies($message): bool
+    {
+        if (! $this->capturesBody()) {
+            return false;
+        }
+
+        if ($this->bodyScope() === 'all') {
+            return true;
+        }
+
+        return $this->extractor->isSystemMail($message);
+    }
+
+    /**
+     * Redact token-bearing URLs inside the JSON-encoded header list.
+     *
+     * @param mixed $json
+     * @return mixed
+     */
+    protected function redactHeaders($json)
+    {
+        if (! is_string($json) || $json === '') {
+            return $json;
+        }
+
+        try {
+            $decoded = json_decode($json, true);
+
+            if (! is_array($decoded)) {
+                return $json;
+            }
+
+            foreach ($decoded as &$header) {
+                if (is_array($header) && isset($header['value']) && is_string($header['value'])) {
+                    $header['value'] = $this->redactor->redact($header['value']);
+                }
+            }
+
+            unset($header);
+
+            $encoded = json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+
+            return $encoded === false ? $json : $encoded;
+        } catch (Throwable $e) {
+            return $json;
+        }
     }
 
     /**
@@ -108,11 +186,23 @@ class MailAuditRecorder
 
             $fields = $this->extractor->extract($message);
 
-            if (! $this->capturesBody()) {
+            if (! $this->shouldStoreBodies($message)) {
                 $fields['body_html'] = null;
                 $fields['body_text'] = null;
                 $fields['has_html'] = false;
                 $fields['has_text'] = false;
+            } elseif ($this->redactsTokens()) {
+                if ($fields['body_html'] !== null) {
+                    $fields['body_html'] = $this->redactor->redact($fields['body_html']);
+                }
+
+                if ($fields['body_text'] !== null) {
+                    $fields['body_text'] = $this->redactor->redact($fields['body_text']);
+                }
+            }
+
+            if ($this->redactsTokens()) {
+                $fields['headers'] = $this->redactHeaders($fields['headers'] ?? null);
             }
 
             $fields['status'] = 'pending';

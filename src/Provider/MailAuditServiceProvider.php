@@ -15,6 +15,7 @@ use Illuminate\Contracts\Container\Container;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Toreador\MailAudit\Mail\AuditTransport;
 use Toreador\MailAudit\Mail\SymfonyMessageExtractor;
+use Toreador\MailAudit\Mail\TokenRedactor;
 use Toreador\MailAudit\MailAuditRecorder;
 use Toreador\MailAudit\MailAuditRepository;
 
@@ -31,10 +32,13 @@ class MailAuditServiceProvider extends AbstractServiceProvider
 
         $this->container->singleton(SymfonyMessageExtractor::class);
 
+        $this->container->singleton(TokenRedactor::class);
+
         $this->container->singleton(MailAuditRecorder::class, function (Container $container) {
             return new MailAuditRecorder(
                 $container->make(MailAuditRepository::class),
                 $container->make(SymfonyMessageExtractor::class),
+                $container->make(TokenRedactor::class),
                 $container->make(SettingsRepositoryInterface::class),
                 $container->has('log') ? $container->make('log') : null
             );
